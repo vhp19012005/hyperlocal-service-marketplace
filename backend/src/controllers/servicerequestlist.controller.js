@@ -3,6 +3,7 @@ const Review = require("../models/review.model");
 const ServiceProvider = require("../models/sprovider.model");
 const Otp = require("../models/otp.models");
 const sendEmail = require('../config/sendEmail');
+const sendSms = require('../config/sendSms');
 const ExtraCharge = require("../models/extraCharge.model");
 // GET bookings for provider dashboard
 exports.getProviderBookings = async (req, res) => {
@@ -126,7 +127,7 @@ exports.sendOtp = async (req, res) => {
 
     const { id } = req.params;
     console.log("Booking ID for OTP:", id);
-    const booking = await Booking.findById(id).populate("user", "email");
+    const booking = await Booking.findById(id).populate("user", "email phone");
 
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
@@ -142,9 +143,21 @@ exports.sendOtp = async (req, res) => {
 
      await sendEmail(
             email,
-            "Reset Password",
-            `Your OTP for password reset is ${otp}`
+            "send otp",
+            `Your OTP  is ${otp}`
         );
+
+    // send SMS if phone exists
+    try {
+      const phone = booking.user.phone;
+      if (phone) {
+        const smsBody = `Your OTP for password reset is ${otp}`;
+        await sendSms(phone, smsBody);
+      }
+    } catch (smsErr) {
+      console.error('Error sending SMS:', smsErr.message);
+      // don't fail the request if SMS fails
+    }
 
     res.status(200).json({
       success: true,
