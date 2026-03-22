@@ -151,7 +151,7 @@ exports.sendOtp = async (req, res) => {
     try {
       const phone = booking.user.phone;
       if (phone) {
-        const smsBody = `Your OTP for password reset is ${otp}`;
+        const smsBody = `Your OTP  is ${otp}`;
         await sendSms(phone, smsBody);
       }
     } catch (smsErr) {
